@@ -1,0 +1,38 @@
+# cf.https://dev.classmethod.jp/articles/cloudformation-s3bucket-type/
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  OutputS3BucketName:
+    Description: Whether or not to output name of S3 bucket.
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  EnableToOutputS3BucketName: !Equals
+      - !Sub ${OutputS3BucketName}
+      - true
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "beats-bucket1029"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        # パブリックなオブジェクトのアップロードをさせない
+        # バケット、オブジェクトへのパブリックなACL設定をさせない
+        BlockPublicAcls: True
+        # パブリックなバケットポリシーの設定をさせない
+        BlockPublicPolicy: True
+        # PublicなACLの設定を無効にする
+        IgnorePublicAcls: True
+        # パブリックなバケットポリシー設定を持つバケットへの、パブリックなアクセスとクロスアカウントアクセスを無効にする
+        RestrictPublicBuckets: True
+Outputs:
+  S3BucketName:
+    Condition: EnableToOutputS3BucketName
+    Value: !Ref S3Bucket
+    Description: Name of S3 bucket
