@@ -9,6 +9,9 @@ Parameters:
     AllowedValues:
       - true
       - false
+  AllowIP:
+    Description: Allow IP.
+    Type: String
 
 Conditions:
   EnableToOutputS3BucketName: !Equals
@@ -31,6 +34,25 @@ Resources:
         IgnorePublicAcls: True
         # パブリックなバケットポリシー設定を持つバケットへの、パブリックなアクセスとクロスアカウントアクセスを無効にする
         RestrictPublicBuckets: True
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Deny
+            Resource:
+              - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+            Principal: '*'
+            Condition:
+              NotIpAddress:
+                'aws:SourceIp':
+                  - !Sub ${AllowIP}
+
 Outputs:
   S3BucketName:
     Condition: EnableToOutputS3BucketName
