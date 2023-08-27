@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AwsAccountId:
+    Description: AWS Account ID
+    Type: String
+  GroupArn:
+    Description: Group ARN
+    Type: String
+  DataSourceArn:
+    Description: DataSource ARN
+    Type: String
+
+Resources:
+  QuickSightDataSet:
+    Type: AWS::QuickSight::DataSet
+    DeletionPolicy: 'Delete'
+    Properties:
+      AwsAccountId: !Sub ${AwsAccountId}
+      DataSetId: 'Example'
+      Name: 'Example'
+      PhysicalTableMap:
+        's3source':
+          S3Source:
+            DataSourceArn: !Sub ${DataSourceArn}
+            UploadSettings:
+              Format: 'CSV'
+              StartFromRow: 1
+              ContainsHeader: true
+              TextQualifier: 'DOUBLE_QUOTE'
+              Delimiter: ','
+            InputColumns:
+              - Name: 'Name'
+                Type: 'STRING'
+              - Name: 'Designed by'
+                Type: 'STRING'
+              - Name: 'First appeared'
+                Type: 'STRING'
+      LogicalTableMap:
+        's3source':
+          Alias: 'Example'
+          DataTransforms:
+            - CastColumnTypeOperation:
+                ColumnName: 'First appeared'
+                NewColumnType: 'INTEGER'
+            - ProjectOperation:
+                ProjectedColumns:
+                  - 'Name'
+                  - 'Designed by'
+                  - 'First appeared'
+          Source:
+            PhysicalTableId: 's3source'
+      ImportMode: 'SPICE'
+      DataSetUsageConfiguration:
+        DisableUseAsDirectQuerySource: false
+        DisableUseAsImportedSource: false
+      Permissions: 
+        - Principal: !Sub ${GroupArn}
+          Actions: 
+            - 'quicksight:DeleteDataSet'
+            - 'quicksight:UpdateDataSetPermissions'
+            - 'quicksight:PutDataSetRefreshProperties'
+            - 'quicksight:ListRefreshSchedules'
+            - 'quicksight:DescribeDataSetRefreshProperties'
+            - 'quicksight:DescribeDataSet'
+            - 'quicksight:PassDataSet'
+            - 'quicksight:DescribeRefreshSchedule'
+            - 'quicksight:DescribeDataSetPermissions'
+            - 'quicksight:UpdateDataSet'
+            - 'quicksight:DeleteDataSetRefreshProperties'
+            - 'quicksight:CreateIngestion'
+            - 'quicksight:CancelIngestion'
+            - 'quicksight:ListIngestions'
+            - 'quicksight:DescribeIngestion'
+
+  QuickSightAnalysis:
+    Type: AWS::QuickSight::Analysis
+    DeletionPolicy: 'Delete'
+    Properties:
+      AwsAccountId: !Sub ${AwsAccountId}
+      Name: 'Example'
+      AnalysisId: 'Example'
+      Definition:
+        DataSetIdentifierDeclarations:
+          - Identifier: 'Example'
+            DataSetArn: !GetAtt QuickSightDataSet.Arn
+        Sheets:
+          - SheetId: ExampleSheet
+            Name: シート 1
+            Visuals:
+              - TableVisual:
+                  VisualId: 'ExampleTableVisual'
+                  Title:
+                    Visibility: VISIBLE
+                  Subtitle:
+                    Visibility: VISIBLE
+                  ChartConfiguration:
+                    FieldWells:
+                      TableAggregatedFieldWells:
+                        GroupBy:
+                          - CategoricalDimensionField:
+                              FieldId: 'Name'
+                              Column:
+                                DataSetIdentifier: 'Example'
+                                ColumnName: 'Name'
+                        Values: []
+                    SortConfiguration: {}
+                  Actions: []
+            Layouts:
+              - Configuration:
+                  GridLayout:
+                    Elements:
+                      - ElementId: 'ExampleTableVisual'
+                        ElementType: 'VISUAL'
+                        ColumnSpan: 18
+                        RowSpan: 12
+                    CanvasSizeOptions:
+                      ScreenCanvasSizeOptions:
+                        ResizeOption: 'FIXED'
+                        OptimizedViewPortWidth: '1600px'
+            ContentType: 'INTERACTIVE'
+        CalculatedFields: []
+        ParameterDeclarations: []
+        FilterGroups: []
+        AnalysisDefaults:
+          DefaultNewSheetConfiguration:
+            InteractiveLayoutConfiguration:
+              Grid:
+                CanvasSizeOptions:
+                  ScreenCanvasSizeOptions:
+                    ResizeOption: 'FIXED'
+                    OptimizedViewPortWidth: '1600px'
+            SheetContentType: 'INTERACTIVE'
+      Permissions: 
+        - Principal: !Sub ${GroupArn}
+          Actions: 
+            - 'quicksight:RestoreAnalysis'
+            - 'quicksight:UpdateAnalysisPermissions'
+            - 'quicksight:DeleteAnalysis'
+            - 'quicksight:DescribeAnalysisPermissions'
+            - 'quicksight:QueryAnalysis'
+            - 'quicksight:DescribeAnalysis'
+            - 'quicksight:UpdateAnalysis'
+
+  QuickSightTemplate:
+    Type: AWS::QuickSight::Template
+    DeletionPolicy: 'Delete'
+    Properties:
+      AwsAccountId: !Sub ${AwsAccountId}
+      Name: 'Example'
+      TemplateId: 'Example'
+      SourceEntity:
+        SourceAnalysis:
+          Arn: !GetAtt QuickSightAnalysis.Arn
+          DataSetReferences:
+            - DataSetArn: !GetAtt QuickSightDataSet.Arn
+              DataSetPlaceholder: 'QuickSightDataSet'
+      Permissions:
+        - Principal: !Sub ${GroupArn}
+          Actions:
+            - 'quicksight:DescribeTemplate'
+
+  QuickSightDashboard:
+    Type: AWS::QuickSight::Dashboard
+    DeletionPolicy: 'Delete'
+    Properties: 
+      AwsAccountId: !Sub ${AwsAccountId}
+      DashboardId: 'Example'
+      Name: 'Example'
+      DashboardPublishOptions: 
+        AdHocFilteringOption: 
+          AvailabilityStatus: 'ENABLED'
+        ExportToCSVOption: 
+          AvailabilityStatus: 'DISABLED'
+        SheetControlsOption: 
+          VisibilityState: 'EXPANDED'
+      Definition:
+        DataSetIdentifierDeclarations:
+          - Identifier: 'Example'
+            DataSetArn: !GetAtt QuickSightDataSet.Arn
+        Sheets:
+          - SheetId: ExampleSheet
+            Name: シート 1
+            Visuals:
+              - TableVisual:
+                  VisualId: 'ExampleTableVisual'
+                  Title:
+                    Visibility: VISIBLE
+                  Subtitle:
+                    Visibility: VISIBLE
+                  ChartConfiguration:
+                    FieldWells:
+                      TableAggregatedFieldWells:
+                        GroupBy:
+                          - CategoricalDimensionField:
+                              FieldId: 'Name'
+                              Column:
+                                DataSetIdentifier: 'Example'
+                                ColumnName: 'Name'
+                        Values: []
+                    SortConfiguration: {}
+                  Actions: []
+            Layouts:
+              - Configuration:
+                  GridLayout:
+                    Elements:
+                      - ElementId: 'ExampleTableVisual'
+                        ElementType: 'VISUAL'
+                        ColumnSpan: 18
+                        RowSpan: 12
+                    CanvasSizeOptions:
+                      ScreenCanvasSizeOptions:
+                        ResizeOption: 'FIXED'
+                        OptimizedViewPortWidth: '1600px'
+            ContentType: 'INTERACTIVE'
+        CalculatedFields: []
+        ParameterDeclarations: []
+        FilterGroups: []
+        AnalysisDefaults:
+          DefaultNewSheetConfiguration:
+            InteractiveLayoutConfiguration:
+              Grid:
+                CanvasSizeOptions:
+                  ScreenCanvasSizeOptions:
+                    ResizeOption: 'FIXED'
+                    OptimizedViewPortWidth: '1600px'
+            SheetContentType: 'INTERACTIVE'
+      Permissions: 
+        - Principal: !Sub ${GroupArn}
+          Actions: 
+            - 'quicksight:DescribeDashboard'
+            - 'quicksight:ListDashboardVersions'
+            - 'quicksight:UpdateDashboardPermissions'
+            - 'quicksight:QueryDashboard'
+            - 'quicksight:UpdateDashboard'
+            - 'quicksight:DeleteDashboard'
+            - 'quicksight:DescribeDashboardPermissions'
+            - 'quicksight:UpdateDashboardPublishedVersion'
