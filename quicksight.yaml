@@ -169,11 +169,13 @@ Resources:
       Name: 'Example'
       DashboardPublishOptions: 
         AdHocFilteringOption: 
-          AvailabilityStatus: 'ENABLED'
+          AvailabilityStatus: 'DISABLED'
         ExportToCSVOption: 
           AvailabilityStatus: 'DISABLED'
         SheetControlsOption: 
-          VisibilityState: 'EXPANDED'
+          VisibilityState: 'COLLAPSED'
+        VisualMenuOption:
+          VisibilityState: 'DISABLED'
       Definition:
         DataSetIdentifierDeclarations:
           - Identifier: 'Example'
