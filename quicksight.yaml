@@ -105,6 +105,16 @@ Resources:
                                 ColumnName: 'Name'
                         Values: []
                     SortConfiguration: {}
+                    TableOptions:
+                      CellStyle:
+                        BackgroundColor: '#FFFFFF'
+                  ConditionalFormatting:
+                    ConditionalFormattingOptions:
+                      - Row:
+                          BackgroundColor:
+                            Solid:
+                              Expression: '{Name} = "Java"'
+                              Color: '#DE3B00'
                   Actions: []
             Layouts:
               - Configuration:
