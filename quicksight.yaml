@@ -177,15 +177,6 @@ Resources:
       AwsAccountId: !Sub ${AwsAccountId}
       DashboardId: 'Example'
       Name: 'Example'
-      DashboardPublishOptions: 
-        AdHocFilteringOption: 
-          AvailabilityStatus: 'DISABLED'
-        ExportToCSVOption: 
-          AvailabilityStatus: 'DISABLED'
-        SheetControlsOption: 
-          VisibilityState: 'COLLAPSED'
-        VisualMenuOption:
-          VisibilityState: 'DISABLED'
       Definition:
         DataSetIdentifierDeclarations:
           - Identifier: 'Example'
